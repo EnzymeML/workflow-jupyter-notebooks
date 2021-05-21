@@ -144,8 +144,4 @@ pyenzyme/Examples/getJSONValid.py
 # Datasets
 datasets/*
 # exceptions
-!datasets/Rother/
-!datasets/API-Test-Fantasy.json
-!datasets/EnzymeML_ApPDC.xlsm
-!datasets/Stephan_pH7.xlsx
-!datasets/Michaelis menten Hannah.xlsx
+!datasets/pH optimum 7.omex
