@@ -126,9 +126,15 @@ class EnzymeMLDocJSON(object):
     def getData(self, reaction, species):
         time = []
         data = []
+        # go through list of educts/products/modifiers of reaction depending on species
         for reactant in self.reactionDic[reaction][self.typeDic[species]]:
             if reactant['species'] == species:
                 for rep in reactant['replicates']:
                     time = rep['time']
                     data.append(rep['data'])
         return (np.array(time), np.array(data))
+    
+    def getEnzymeConcentration(self, reaction, species):
+        for reactant in self.reactionDic[reaction][self.typeDic[species]]:
+            if reactant['species'] == species:
+                return reactant['init_conc']

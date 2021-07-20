@@ -13,8 +13,6 @@ class Modeler:
     def __init__(self):
         '''
         Helper Class to model data from EnzymeML document
-
-        Args:
         '''
         pass
 
@@ -27,6 +25,8 @@ class Modeler:
             t: time
             w0: vector of initial states: w0 = [v0, S0]
             params: parameters object from lmfit
+        Returns:
+            w: vector with solution of ODE
         '''
 
         w = odeint(f, w0, t, args=(params,))
@@ -41,6 +41,8 @@ class Modeler:
             t: time
             data: measured data
             f: ODEs
+        Returns:
+            residual: flattend array of residuals
         '''
 
         try:
@@ -67,6 +69,8 @@ class Modeler:
             t: time
             data: measured data
             f: ODEs
+        Returns:
+            residual: flattend array of residuals
         '''
 
         try:
@@ -90,6 +94,8 @@ class Modeler:
         Args:
             t: time
             data: measured data
+        Returns:
+            v: array with gradients
         '''
 
         v_all = 0.0*data[:] # initialize velocity vector
@@ -114,6 +120,8 @@ class Modeler:
         Args:
             t: time
             data: measured data
+        Returns:
+            vmax: maximum gradient
         '''
 
         v = self._get_v(t, data)
@@ -126,6 +134,8 @@ class Modeler:
         Args:
             t: time
             data: measured data
+        Returns:
+            km: initial km value from time-course data
         '''
 
         v = self._get_v(t, data)
@@ -143,6 +153,8 @@ class Modeler:
 
         Args:
             data: measured data
+        Returns:
+            bias: initial bias value
         '''
 
         bias = np.mean(data, axis=0)[-1]
@@ -154,6 +166,8 @@ class Modeler:
 
         Args:
             data: measured data
+        Returns:
+            S0: initial S0 value
         '''
 
         s0 = np.mean(data, axis=0)[0]
@@ -167,6 +181,8 @@ class Modeler:
             t: time
             data: measured data
             params: parameters object from lmfit
+        Returns:
+            results: from lmfit minimize
         '''
 
         try:
@@ -175,3 +191,54 @@ class Modeler:
         except KeyError:
             result = minimize(self._residual , params, args=(t, data, ode), method='leastsq')
         return result
+
+    def convert_to_conc(self, absorption):
+        '''
+        Convert from absorption to concentration 
+        with molar extinction coefficient for pyruvate
+        according to Lamber Beer law 
+
+        Args:
+            absorption: value of light absorption
+        Returns:
+            float: concentration in mmol/L
+        '''
+
+        epsilon = 24.8 # molar extinction coefficient L*cm/mol
+        d = 1. # optical path length cm
+
+        c = absorption/(epsilon*d)*1000
+
+        return c
+
+    def get_table_data(self, results):
+        '''
+        Prepares parameter values for table
+
+        Args:
+            results: dictionary with parameters
+        Retruns:
+            table_data: matrix with content
+            columns: labels for columns
+            rows: labels for rows
+        '''
+
+        rows = ['S0', 'bias', 'vmax', 'Km', 'a']
+        columns =[]
+        table = []
+        for key, item in results.items():
+            columns.append(key)
+            inner_array = []
+            for key in rows:
+                value = item.params.valuesdict().get(key)
+                if value == None:
+                    inner_array.append('-')
+                else:
+                    if not (key == 'vmax' or key == 'a'):
+                        value = self.convert_to_conc(value)
+                    inner_array.append(round(value,3))
+            table.append(inner_array)
+
+        table_data = np.transpose(np.array(table))
+
+        return table_data, columns, rows
