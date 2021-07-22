@@ -240,5 +240,7 @@ class Modeler:
             table.append(inner_array)
 
         table_data = np.transpose(np.array(table))
+        
+        rows = ['S0 [mmol/L]', 'bias [mmol/L]', 'vmax [M/min]', 'Km [mmol/L]', 'a [1/min]']
 
         return table_data, columns, rows
